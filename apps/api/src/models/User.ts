@@ -4,9 +4,23 @@ import path from 'path';
 import bcrypt from 'bcryptjs';
 import { PlatformUser } from "@enterprise-commerce/core/platform/types"
 import openDb from '../db/db';
+import { Result } from 'postcss';
 
-export const createUser = () => {} // Implement the createUser function
+export const createUser = async (inputUser: PlatformUser): Promise<PlatformUser | null> => {
+  const db = await openDb();
+  try {
+  const response = await db.run('INSERT INTO users (email,password) VALUES (?, ?)',inputUser.email,inputUser.password);
+  const user = await db.get<PlatformUser>('SELECT * FROM users WHERE id = ?', response.lastID);
 
+  return user ?? null;
+
+} catch (error) {
+  console.error("Error",error);
+  return null;
+  } finally {
+  await db.close();
+  } // Implement the createUser function
+};
 export const findUserById = async (id: string): Promise<PlatformUser | null> => {
   const db = await openDb();
   const user = await db.get<PlatformUser>('SELECT * FROM users WHERE id = ?', id);
